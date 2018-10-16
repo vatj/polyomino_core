@@ -61,14 +61,11 @@ struct PhenotypeTable {
   std::unordered_map<uint8_t,std::vector<Phenotype> > known_phenotypes;
   
   Phenotype_ID GetPhenotypeID(Phenotype& phen);
-
   void RelabelPhenotypes(std::vector<Phenotype_ID >& pids);
-
-  /* Count each ID frequency */
   std::map<Phenotype_ID,uint16_t> PhenotypeFrequencies(std::vector<Phenotype_ID >& pids, bool& rare_phenotypes);
-        
   void PrintTable(std::ofstream& fout);
-private:
+  
+protected:
   std::unordered_map<uint8_t,std::vector<Phenotype>> undiscovered_phenotypes;
   std::vector<size_t> new_phenotype_xfer;
   std::unordered_map<uint8_t, std::vector<uint16_t>> undiscovered_phenotype_counts;
