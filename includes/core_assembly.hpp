@@ -1,9 +1,14 @@
-#include "core_phenotype.hpp"
+//#include "core_phenotype.hpp"
 #include <random>
+#include <vector>
+#include <set>
+#include <array>
+#include <algorithm>
+
 
 extern thread_local std::mt19937 RNG_Engine;
 
-typedef std::pair<uint8_t,uint8_t> interaction_pair;
+using interaction_pair = std::pair<uint8_t,uint8_t>;
 
 struct PotentialTileSite {
   interaction_pair bonding_pair;

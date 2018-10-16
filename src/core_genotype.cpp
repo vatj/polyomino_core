@@ -1,5 +1,15 @@
 #include "core_genotype.hpp"
 
+bool InteractionMatrix(const uint8_t face_1,const uint8_t face_2) {
+  if(face_1==0 || face_2 ==0)
+    return false;
+  
+  return face_2 == (1-face_1%2)*(face_1-1)+(face_1%2)*(face_1+1);
+}
+double BindingStrength(__attribute__((unused)) const uint8_t face_1,__attribute__((unused)) const uint8_t face_2) {
+  return 1;
+}
+
 uint8_t Interaction_Matrix(uint8_t input_face) {
   return input_face>0 ?  (1-input_face%2)*(input_face-1)+(input_face%2)*(input_face+1) : input_face;
 }

@@ -1,20 +1,18 @@
 //#include "core_genotype.hpp"
 #include <fstream>
-#include <iostream>
 
 #include <unordered_map>
 #include <map>
 
-#include <cmath>
+
 #include <cstdint>
 
 #include <vector>
+#include <utility>
 #include <set>
 #include <tuple>
 
-#include <algorithm>
-#include <utility>
-#include <numeric>
+
 
 /*! free vs one-sided polyominoes and tile vs orientation determinism */
 constexpr uint8_t FREE_POLYOMINO = true ? 2 : 1, DETERMINISM_LEVEL=3;
@@ -29,13 +27,17 @@ determinism levels as follows:
 */
 
 /*! phenotype definitions */
+using Phenotype_ID = std::pair<uint8_t,uint16_t>;
+constexpr Phenotype_ID NULL_pid{0,0};
+using interaction_pair = std::pair<uint8_t,uint8_t>;
+
+
 struct Phenotype {
   uint8_t dx=1,dy=1;
   std::vector<uint8_t> tiling{1};
 };
 
-typedef std::pair<uint8_t,uint16_t> Phenotype_ID;
-constexpr Phenotype_ID NULL_pid{0,0};
+Phenotype GetPhenotypeFromGrid(std::vector<int8_t>& placed_tiles);
 
 /*! print phenotype to stdout */
 void PrintShape(Phenotype& phen);

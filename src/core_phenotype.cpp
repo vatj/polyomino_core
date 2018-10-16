@@ -1,4 +1,9 @@
 #include "core_phenotype.hpp"
+#include <random>
+#include <iostream>
+#include <cmath>
+#include <algorithm>
+#include <numeric>
 
 void PrintShape(Phenotype& phen) {
   for(uint8_t y=0;y<phen.dy;++y) {
@@ -131,6 +136,38 @@ void GetMinPhenRepresentation(Phenotype& phen) {
   phen.tiling=min_tilings.front();
 }
 
+Phenotype GetPhenotypeFromGrid(std::vector<int8_t>& placed_tiles) {
+  std::vector<int8_t> x_locs, y_locs,tile_vals;
+  x_locs.reserve(placed_tiles.size()/3);y_locs.reserve(placed_tiles.size()/3);tile_vals.reserve(placed_tiles.size()/3);
+  
+  for(std::vector<int8_t>::iterator check_iter = placed_tiles.begin();check_iter!=placed_tiles.end();check_iter+=3) {
+    x_locs.emplace_back(*check_iter);
+    y_locs.emplace_back(*(check_iter+1));
+    tile_vals.emplace_back(*(check_iter+2));
+  }
+  std::vector<int8_t>::iterator x_left,x_right,y_top,y_bottom;
+  std::tie(x_left,x_right)=std::minmax_element(x_locs.begin(),x_locs.end());
+  std::tie(y_bottom,y_top)=std::minmax_element(y_locs.begin(),y_locs.end());
+  uint8_t dx=*x_right-*x_left+1,dy=*y_top-*y_bottom+1;
+  std::vector<uint8_t> spatial_grid(dx*dy);
+  
+  for(uint16_t tileIndex=0;tileIndex<x_locs.size();++tileIndex) {
+    uint8_t tile_detail=0;
+    switch(DETERMINISM_LEVEL) {
+    case 1:
+      tile_detail=tile_vals[tileIndex] > 0 ? 1 : 0;
+      break;
+    case 2:
+      tile_detail=tile_vals[tileIndex] > 0 ? (tile_vals[tileIndex]-1)/4+1 : 0;
+      break;
+    case 3:
+      tile_detail=tile_vals[tileIndex];
+    }
+    spatial_grid[(*y_top-y_locs[tileIndex])*dx + (x_locs[tileIndex]-*x_left)]=tile_detail;
+  }
+  return Phenotype{dx,dy,spatial_grid};
+}
+
 
 Phenotype_ID PhenotypeTable::GetPhenotypeID(Phenotype& phen) {
   uint8_t phenotype_size=std::count_if(phen.tiling.begin(),phen.tiling.end(),[](const int c){return c != 0;});
@@ -199,3 +236,5 @@ void PhenotypeTable::PrintTable(std::ofstream& fout) {
     }
   }
 }
+
+
