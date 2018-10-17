@@ -1,6 +1,5 @@
 #include "core_assembly.hpp"
-
-thread_local std::mt19937 RNG_Engine(std::random_device{}());
+#include <algorithm>
 
 std::vector<int8_t> AssemblePolyomino(const std::vector<std::pair<interaction_pair,double> > edges,const int8_t seed,const size_t UNBOUND_LIMIT, std::set<interaction_pair>& interacting_indices) {
   uint16_t accumulated_time=0;

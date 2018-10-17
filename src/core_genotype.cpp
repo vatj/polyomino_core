@@ -1,20 +1,16 @@
 #include "core_genotype.hpp"
 
-bool InteractionMatrix(const uint8_t face_1,const uint8_t face_2) {
+bool InteractionMatrix(const int8_t face_1,const int8_t face_2) {
   if(face_1==0 || face_2 ==0)
     return false;
   
   return face_2 == (1-face_1%2)*(face_1-1)+(face_1%2)*(face_1+1);
 }
-double BindingStrength(__attribute__((unused)) const uint8_t face_1,__attribute__((unused)) const uint8_t face_2) {
+double BindingStrength(__attribute__((unused)) const int8_t face_1,__attribute__((unused)) const int8_t face_2) {
   return 1;
 }
 
-uint8_t Interaction_Matrix(uint8_t input_face) {
-  return input_face>0 ?  (1-input_face%2)*(input_face-1)+(input_face%2)*(input_face+1) : input_face;
-}
-
-/*! strips genotype of unused interacting faces and replaces with 0*/
+/*
 void Clean_Genome(Genotype& genome,bool Remove_Duplicates=true) {
   for(uint32_t t=1;t<=*std::max_element(genome.begin(),genome.end());t+=2) { 
     if(std::count(genome.begin(),genome.end(),t)==0) //genotype doens't contain this face
@@ -110,3 +106,4 @@ void Search_Next_Tile(Genotype& genome, std::vector<uint8_t>& Unvisited, std::ve
     }
   }
 }
+*/

@@ -1,10 +1,9 @@
-//#include "core_phenotype.hpp"
-#include <random>
-#include <vector>
-#include <set>
-#include <array>
-#include <algorithm>
+#pragma once
+#include "core_phenotype.hpp"
+#include "core_genotype.hpp"
 
+#include <array>
+#include <random>
 
 extern thread_local std::mt19937 RNG_Engine;
 

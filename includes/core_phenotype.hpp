@@ -1,17 +1,14 @@
-//#include "core_genotype.hpp"
+#pragma once
+#include <cstdint>
 #include <fstream>
 
 #include <unordered_map>
 #include <map>
 
-
-#include <cstdint>
-
 #include <vector>
 #include <utility>
 #include <set>
 #include <tuple>
-
 
 
 /*! free vs one-sided polyominoes and tile vs orientation determinism */
@@ -28,7 +25,7 @@ determinism levels as follows:
 
 /*! phenotype definitions */
 using Phenotype_ID = std::pair<uint8_t,uint16_t>;
-constexpr Phenotype_ID NULL_pid{0,0};
+constexpr Phenotype_ID NULL_pid{0,0},ND_pid{1,0};
 using interaction_pair = std::pair<uint8_t,uint8_t>;
 
 
@@ -52,6 +49,7 @@ bool ComparePolyominoes(Phenotype& phen1, const Phenotype& phen2);
 void MinimizePhenRep(std::vector<uint8_t>& tiling);
 void GetMinPhenRepresentation(Phenotype& phen);
 
+
 namespace model_params
 {
   extern bool FIXED_TABLE;
@@ -59,12 +57,14 @@ namespace model_params
   extern uint16_t phenotype_builds;
 }
 
+ 
+
 struct PhenotypeTable {
   std::unordered_map<uint8_t,std::vector<Phenotype> > known_phenotypes;
   
   Phenotype_ID GetPhenotypeID(Phenotype& phen);
   void RelabelPhenotypes(std::vector<Phenotype_ID >& pids);
-  std::map<Phenotype_ID,uint16_t> PhenotypeFrequencies(std::vector<Phenotype_ID >& pids, bool& rare_phenotypes);
+  std::map<Phenotype_ID,uint16_t> PhenotypeFrequencies(std::vector<Phenotype_ID >& pids,const Phenotype_ID RARE_pid=NULL_pid);
   void PrintTable(std::ofstream& fout);
   
 protected:

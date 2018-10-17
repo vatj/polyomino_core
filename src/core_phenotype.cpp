@@ -1,5 +1,5 @@
 #include "core_phenotype.hpp"
-#include <random>
+
 #include <iostream>
 #include <cmath>
 #include <algorithm>
@@ -168,7 +168,6 @@ Phenotype GetPhenotypeFromGrid(std::vector<int8_t>& placed_tiles) {
   return Phenotype{dx,dy,spatial_grid};
 }
 
-
 Phenotype_ID PhenotypeTable::GetPhenotypeID(Phenotype& phen) {
   uint8_t phenotype_size=std::count_if(phen.tiling.begin(),phen.tiling.end(),[](const int c){return c != 0;});
     
@@ -214,16 +213,18 @@ void PhenotypeTable::RelabelPhenotypes(std::vector<Phenotype_ID >& pids) {
   undiscovered_phenotype_counts.clear();
   new_phenotype_xfer.clear();
 }
-std::map<Phenotype_ID,uint16_t> PhenotypeTable::PhenotypeFrequencies(std::vector<Phenotype_ID >& pids, bool& rare_phenotypes) {
+
+std::map<Phenotype_ID,uint16_t> PhenotypeTable::PhenotypeFrequencies(std::vector<Phenotype_ID >& pids,const Phenotype_ID RARE_pid) {
   std::map<Phenotype_ID, uint16_t> ID_counter;
   for(std::vector<Phenotype_ID >::const_iterator ID_iter = pids.begin(); ID_iter!=pids.end(); ++ID_iter) {
     if(ID_iter->second < known_phenotypes[ID_iter->first].size())
       ++ID_counter[std::make_pair(ID_iter->first,ID_iter->second)];
     else
-      rare_phenotypes=true;
+      ++ID_counter[RARE_pid];
   }
   return ID_counter;
 }
+
 
 void PhenotypeTable::PrintTable(std::ofstream& fout) {
   for(auto known_phens : known_phenotypes) {
@@ -236,5 +237,6 @@ void PhenotypeTable::PrintTable(std::ofstream& fout) {
     }
   }
 }
+
 
 

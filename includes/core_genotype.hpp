@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdint>
 #include <vector>
 #include <algorithm>
@@ -6,23 +8,26 @@
 #include <tuple>
 #include <map>
 
-using Genotype = std::vector<uint8_t>;
+using Genotype = std::vector<int8_t>;
 using interaction_pair = std::pair<uint8_t,uint8_t>;
 
-bool InteractionMatrix(const uint8_t face_1,const uint8_t face_2);
-double BindingStrength(const uint8_t face_1,const uint8_t face_2);
 
-template <typename T>
-uint8_t CountActiveInterfaces(const T& genotype) {
+bool InteractionMatrix(const int8_t face_1,const int8_t face_2);
+double BindingStrength(const int8_t face_1,const int8_t face_2);
+
+
+template<typename T, typename A>
+uint8_t CountActiveInterfaces(const std::vector<T,A>& genotype) {
   uint8_t N_interfaces=0;
   for(uint8_t b1=0;b1<genotype.size() ;++b1)
     for(uint8_t b2=b1;b2<genotype.size();++b2)
-      if(InteractionMatrix(genotype[b1],genotype[b2]))
+      if(InteractionMatrix(genotype[b1],genotype[b2])) 
         ++N_interfaces;
   return N_interfaces;
 }
-template <typename T>
-void StripNoncodingGenotype(T& genotype) {
+
+template<typename T, typename A>
+void StripNoncodingGenotype(std::vector<T,A>& genotype) {
   std::vector<uint8_t> coding{0},noncoding(genotype.size()/4-1);
   std::iota(noncoding.begin(), noncoding.end(), 1);
   
@@ -41,8 +46,9 @@ void StripNoncodingGenotype(T& genotype) {
   for(uint8_t rm=0;rm<noncoding.size();++rm)
     genotype.erase(genotype.begin()+(noncoding[rm]-rm)*4,genotype.begin()+(1+noncoding[rm]-rm)*4);
 }
-template <typename T>
-std::vector<std::pair<interaction_pair,double> > GetEdgePairs(const T& genotype) {
+
+template <typename T, typename A>
+std::vector<std::pair<interaction_pair,double> > GetEdgePairs(const std::vector<T,A>& genotype) {
   std::vector<std::pair<interaction_pair,double> > edge_pairs;
   for(uint8_t b1=0;b1<genotype.size();++b1)
     for(uint8_t b2=b1;b2<genotype.size();++b2)
@@ -52,9 +58,10 @@ std::vector<std::pair<interaction_pair,double> > GetEdgePairs(const T& genotype)
   return edge_pairs;
 }
 
-uint8_t Interaction_Matrix(uint8_t input_face);
+/*
 void Clean_Genome(Genotype& genome,int secondNonInteracting,bool Remove_Duplicates);
 void Minimize_Tile_Set(Genotype& genome);
 std::map<uint8_t,uint8_t> DuplicateGenes(Genotype& genome);
 bool Disjointed_Check(Genotype& genome);
 void Search_Next_Tile(Genotype& genome, std::vector<uint8_t>& Unvisited, std::vector<uint8_t>& Connected_Components,uint8_t tile);
+*/
