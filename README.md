@@ -7,19 +7,18 @@ Base for polyomino model development
 Some minor diffulties on submodule cloning etc, google is probably more helpful at this point...
 
 ### Extending the polyomino core model
-
-Need to implement two basic functions
-  
-Interaction matrix to determine if two interfaces interact
+Generic assembly can be quickly implemented using existing functions.
+Extend the model as  
+  - extend base assembly 
 ```
-bool InteractionMatrix(const typename face_1,const typename face_2);
-
+class NewAssemblyModel : public PolyominoAssembly<NewAssemblyModel>
 ```
-
-And if they **do** interact, how strong is their interaction
+  - implement the interaction matrix that returns the interaction strength between two interfaces
 ```
-double BindingStrength(const interface_type face_1,const interface_type face_2);
+double InteractionMatrix(typename A, typename B)
 ```
+  - implement any specific methods
 
 ## Building
-The makefile in your extending directory should include a rule to build the submodule
+The core library is header only, so need to add an include path
+  - -Ipath/to/library
