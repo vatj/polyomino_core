@@ -1,0 +1,14 @@
+# Ignore any pyc from imports
+scripts/__pycache__
+scripts/*.pyc
+scripts/*.so
+scripts/*.sh
+
+scripts/*.pdf
+
+# Ignore Mac specific files
+.DS_Store
+
+\#*\#
+.\#*
+*txt

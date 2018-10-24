@@ -8,7 +8,7 @@ Some minor diffulties on submodule cloning etc, google is probably more helpful 
 
 ### Extending the polyomino core model
 Generic assembly can be quickly implemented using existing functions.
-Extend the model as  
+Extend the model as
   - extend base assembly 
 ```
 class NewAssemblyModel : public PolyominoAssembly<NewAssemblyModel>
@@ -18,6 +18,8 @@ class NewAssemblyModel : public PolyominoAssembly<NewAssemblyModel>
 double InteractionMatrix(typename A, typename B)
 ```
   - implement any specific methods
+    - Mutations
+    - interaction matrix related calculations
 
 ## Building
 The core library is header only, so need to add an include path
