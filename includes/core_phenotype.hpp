@@ -17,7 +17,7 @@
 
 
 /*! free vs one-sided polyominoes and tile vs orientation determinism */
-constexpr uint8_t FREE_POLYOMINO = true ? 2 : 1, DETERMINISM_LEVEL=3;
+//constexpr uint8_t FREE_POLYOMINO = true ? 2 : 1, DETERMINISM_LEVEL=3;
 /*! 
   (true) free polyominoes are not chirally distinct
   (false) one-sided polyominoes are
@@ -31,8 +31,6 @@ determinism levels as follows:
 /*! phenotype definitions */
 using Phenotype_ID = std::pair<uint8_t,uint16_t>;
 constexpr Phenotype_ID NULL_pid{0,0},ND_pid{1,0};
-//using interaction_pair = std::pair<uint8_t,uint8_t>;
-
 
 struct Phenotype {
   uint8_t dx=1,dy=1;
@@ -41,6 +39,7 @@ struct Phenotype {
 
 namespace model_params
 {
+  extern uint8_t FREE_POLYOMINO, DETERMINISM_LEVEL;
   extern bool FIXED_TABLE;
   extern double UND_threshold;
   extern uint16_t phenotype_builds;
@@ -74,7 +73,7 @@ inline void ClockwisePiRotation(Phenotype& phen) {
 inline void ChiralFlip(Phenotype& phen) {
   for(uint8_t row=0;row<phen.dy;++row)
     std::reverse(phen.tiling.begin()+row*phen.dx,phen.tiling.begin()+(row+1)*phen.dx);
-  if(DETERMINISM_LEVEL==3)
+  if(model_params::DETERMINISM_LEVEL==3)
     for(uint8_t& element : phen.tiling)
       if(element && element%2==0)
 	element+=-(element-1)%4+((element-1)%4+2)%4;
@@ -85,7 +84,7 @@ inline void MinimizePhenRep(std::vector<uint8_t>& tiling) {
     tiling={1};
     return;
   }
-  if(DETERMINISM_LEVEL==1) {
+  if(model_params::DETERMINISM_LEVEL==1) {
     for(uint8_t& t : tiling)
       t= t ? 1:0;
     return;
@@ -95,14 +94,14 @@ inline void MinimizePhenRep(std::vector<uint8_t>& tiling) {
   uint8_t swap_count=1;  
   for(std::vector<uint8_t>::iterator t_iter=std::find_if(tiling.begin(),tiling.end(),[](const int s) { return s>0; });t_iter!=tiling.end();) {
     const uint8_t static_swap=*t_iter;
-    for(uint8_t cyclic = 0; cyclic< (DETERMINISM_LEVEL==3?4:1); ++cyclic) {
-      const uint8_t pre_swap=DETERMINISM_LEVEL==3 ? (static_swap-(static_swap-1)%4)+((static_swap-1)%4+cyclic)%4 : static_swap;
+    for(uint8_t cyclic = 0; cyclic< (model_params::DETERMINISM_LEVEL==3?4:1); ++cyclic) {
+      const uint8_t pre_swap=model_params::DETERMINISM_LEVEL==3 ? (static_swap-(static_swap-1)%4)+((static_swap-1)%4+cyclic)%4 : static_swap;
       std::replace(tiling.begin(),tiling.end(),swap_count,uint8_t(255));
       std::replace(tiling.begin(),tiling.end(),pre_swap,swap_count);
       std::replace(tiling.begin(),tiling.end(),uint8_t(255),pre_swap);
       ++swap_count;
     }  
-    t_iter=std::find_if(tiling.begin(),tiling.end(),[swap_count](const int s) { return (s>0 && (DETERMINISM_LEVEL==3?s-(s-1)%4:s) >= swap_count); });
+    t_iter=std::find_if(tiling.begin(),tiling.end(),[swap_count](const int s) { return (s>0 && (model_params::DETERMINISM_LEVEL==3?s-(s-1)%4:s) >= swap_count); });
   }
 }
 
@@ -111,7 +110,7 @@ inline void GetMinPhenRepresentation(Phenotype& phen) {
   if(phen.dy > phen.dx)
     ClockwiseRotation(phen);
   
-  for(uint8_t rot=0;rot<FREE_POLYOMINO;++rot) {
+  for(uint8_t rot=0;rot<model_params::FREE_POLYOMINO;++rot) {
     MinimizePhenRep(phen.tiling);
     min_tilings.emplace_back(phen.tiling);
       
@@ -127,7 +126,7 @@ inline void GetMinPhenRepresentation(Phenotype& phen) {
         min_tilings.emplace_back(phen.tiling);
       }
     }
-    if(rot==(FREE_POLYOMINO-1))
+    if(rot==(model_params::FREE_POLYOMINO-1))
       break;
     ChiralFlip(phen);
   }
@@ -146,7 +145,7 @@ inline bool ComparePolyominoes(Phenotype& phen1, const Phenotype& phen2) {
   
   /*! square phenotypes*/
   if(phen1.dx==phen2.dx && phen1.dy==phen2.dy && phen1.dx==phen2.dy) {
-    for(uint8_t flip=0; flip<FREE_POLYOMINO;++flip) {
+    for(uint8_t flip=0; flip<model_params::FREE_POLYOMINO;++flip) {
       if(phen1.tiling==phen2.tiling) 
         return true;
       for(int rotation=0;rotation<3;++rotation) {
@@ -155,7 +154,7 @@ inline bool ComparePolyominoes(Phenotype& phen1, const Phenotype& phen2) {
         if(phen1.tiling==phen2.tiling) 
           return true;
       }
-      if(flip==(FREE_POLYOMINO-1))
+      if(flip==(model_params::FREE_POLYOMINO-1))
         return false; //square phenotype, but never matching
       ChiralFlip(phen1);
       MinimizePhenRep(phen1.tiling);
@@ -163,14 +162,14 @@ inline bool ComparePolyominoes(Phenotype& phen1, const Phenotype& phen2) {
   }
   /*! rectangular phenotypes*/
   if(phen1.dx==phen2.dx && phen1.dy==phen2.dy) {
-    for(uint8_t flip=0; flip<FREE_POLYOMINO;++flip) {
+    for(uint8_t flip=0; flip<model_params::FREE_POLYOMINO;++flip) {
       if(phen1.tiling==phen2.tiling)
         return true;
       ClockwisePiRotation(phen1);
       MinimizePhenRep(phen1.tiling);
       if(phen1.tiling==phen2.tiling)
         return true;
-      if(flip==(FREE_POLYOMINO-1))
+      if(flip==(model_params::FREE_POLYOMINO-1))
         return false; //rectangular phenotype, but never matching
       ChiralFlip(phen1);
       MinimizePhenRep(phen1.tiling);
@@ -178,10 +177,6 @@ inline bool ComparePolyominoes(Phenotype& phen1, const Phenotype& phen2) {
   }
   return false; //catch all
 }
-
-
-
-
 
 inline Phenotype GetPhenotypeFromGrid(std::vector<int8_t>& placed_tiles) {
   std::vector<int8_t> x_locs, y_locs,tile_vals;
@@ -200,7 +195,7 @@ inline Phenotype GetPhenotypeFromGrid(std::vector<int8_t>& placed_tiles) {
   
   for(uint16_t tileIndex=0;tileIndex<x_locs.size();++tileIndex) {
     uint8_t tile_detail=0;
-    switch(DETERMINISM_LEVEL) {
+    switch(model_params::DETERMINISM_LEVEL) {
     case 1:
       tile_detail=tile_vals[tileIndex] > 0 ? 1 : 0;
       break;
@@ -214,9 +209,6 @@ inline Phenotype GetPhenotypeFromGrid(std::vector<int8_t>& placed_tiles) {
   }
   return Phenotype{dx,dy,spatial_grid};
 }
-
-
-
  
 
 struct PhenotypeTable {
@@ -262,6 +254,7 @@ Phenotype_ID PhenotypeTable::GetPhenotypeID(Phenotype& phen) {
     GetMinPhenRepresentation(phen);
     if(static_cast<uint16_t>(std::ceil(model_params::UND_threshold*model_params::phenotype_builds))<=1) {
       known_phenotypes[phenotype_size].emplace_back(phen);
+      new_phenotype_xfer.insert(new_phenotype_xfer.end(),{phenotype_size,known_phenotypes[phenotype_size].size()-1,known_phenotypes[phenotype_size].size()-1});    
       return std::make_pair(phenotype_size,known_phenotypes[phenotype_size].size()-1);
     }
     
