@@ -11,6 +11,8 @@
 #include <array>
 #include <random>
 
+#include <iostream>
+
 extern thread_local std::mt19937 RNG_Engine;
 
 using InteractionPair = std::pair<uint8_t,uint8_t>;
@@ -24,6 +26,7 @@ struct PotentialTileSites {
 template<class Q> //Curiously recurring template pattern
 class PolyominoAssembly {
 public:
+  inline static bool free_seed=true;
 
   //strip all subunits which cannot interact with initial subunit
   template<typename T, typename A>
@@ -59,9 +62,14 @@ public:
     return edge_pairs;
   }
 
-  static inline std::vector<int8_t> AssemblePolyomino(const std::vector<std::pair<InteractionPair,double> > edges,const int8_t seed,const size_t UNBOUND_LIMIT, std::set<InteractionPair>& interacting_indices) {
+  static inline std::vector<int8_t> AssemblePolyomino(const std::vector<std::pair<InteractionPair,double> > edges, std::set<InteractionPair>& interacting_indices) {
     //uint16_t accumulated_time=0;
-     
+    auto max_subunit = std::max_element(edges.begin(), edges.end(),[](const auto& left, const auto& right){return left.first.second <  right.first.second;})->first.second;
+   
+    const int8_t seed = 1+Q::free_seed*4*std::uniform_int_distribution<uint8_t>(0,max_subunit/4)(RNG_Engine);
+    const size_t UNBOUND_LIMIT= 12*(max_subunit/4+1)*(max_subunit/4+1);
+    std::cout<<UNBOUND_LIMIT<<std::endl;
+
     std::vector<int8_t> placed_tiles{0,0,seed},growing_perimeter;
     std::vector<double> strengths_cdf;
     PotentialTileSites perimeter_sites;
