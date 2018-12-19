@@ -1,23 +1,19 @@
 #pragma once
 #include <cstdint>
 #include <fstream>
+#include <iostream>
 
 #include <unordered_map>
 #include <map>
-
 #include <vector>
-#include <utility>
-#include <set>
-#include <tuple>
-
-#include <iostream>
-#include <cmath>
 #include <algorithm>
-#include <numeric>
+#include <iterator>
+#include <sstream>
+#include <string>
+
 
 
 /*! free vs one-sided polyominoes and tile vs orientation determinism */
-//constexpr uint8_t FREE_POLYOMINO = true ? 2 : 1, DETERMINISM_LEVEL=3;
 /*! 
   (true) free polyominoes are not chirally distinct
   (false) one-sided polyominoes are
@@ -28,32 +24,38 @@ determinism levels as follows:
     orientation : 3
 */
 
+namespace model_params
+{
+  extern double UND_threshold;
+  extern uint16_t phenotype_builds;
+}
+
 /*! phenotype definitions */
 using Phenotype_ID = std::pair<uint8_t,uint16_t>;
 constexpr Phenotype_ID NULL_pid{0,0},ND_pid{1,0};
 
 struct Phenotype {
-  uint8_t dx=1,dy=1;
-  std::vector<uint8_t> tiling{1};
+  uint8_t dx,dy;
+  std::vector<uint8_t> tiling;
+
+  Phenotype(uint8_t tdx=1, uint8_t tdy=1, std::vector<uint8_t> tt={1}) {dx=tdx;dy=tdy;tiling=tt;}
+  
+  bool operator==(const Phenotype& rhs)
+  {
+    return this->dx==rhs.dx && this->dy==rhs.dy && this->tiling==rhs.tiling;
+  }
+  static bool FREE_POLYOMINO;
+  static uint8_t DETERMINISM_LEVEL;
 };
 
-namespace model_params
-{
-  extern uint8_t FREE_POLYOMINO, DETERMINISM_LEVEL;
-  extern bool FIXED_TABLE;
-  extern double UND_threshold;
-  extern uint16_t phenotype_builds;
-}
 
-
-/*! print phenotype to stdout */
 inline void PrintShape(Phenotype& phen) {
   for(uint8_t y=0;y<phen.dy;++y) {
     for(uint8_t x=0;x<phen.dx;++x)
       std::cout<<+phen.tiling[y*phen.dx+x]<<" ";
-    std::cout<<std::endl;
+    std::cout<<"\n";
   }
-  std::cout<<std::endl;
+  std::cout<<"\n";
 }
 
 inline void ClockwiseRotation(Phenotype& phen) {
@@ -66,25 +68,17 @@ inline void ClockwiseRotation(Phenotype& phen) {
   phen.tiling=swapper;
 }
 
-inline void ClockwisePiRotation(Phenotype& phen) {
-  std::reverse(phen.tiling.begin(),phen.tiling.end());
-}
-
 inline void ChiralFlip(Phenotype& phen) {
   for(uint8_t row=0;row<phen.dy;++row)
     std::reverse(phen.tiling.begin()+row*phen.dx,phen.tiling.begin()+(row+1)*phen.dx);
-  if(model_params::DETERMINISM_LEVEL==3)
+  if(Phenotype::DETERMINISM_LEVEL==3)
     for(uint8_t& element : phen.tiling)
       if(element && element%2==0)
 	element+=-(element-1)%4+((element-1)%4+2)%4;
 }
 
 inline void MinimizePhenRep(std::vector<uint8_t>& tiling) {
-  if(tiling.size()==1) {
-    tiling={1};
-    return;
-  }
-  if(model_params::DETERMINISM_LEVEL==1) {
+  if(tiling.size()==1 || Phenotype::DETERMINISM_LEVEL==1) {
     for(uint8_t& t : tiling)
       t= t ? 1:0;
     return;
@@ -94,14 +88,14 @@ inline void MinimizePhenRep(std::vector<uint8_t>& tiling) {
   uint8_t swap_count=1;  
   for(std::vector<uint8_t>::iterator t_iter=std::find_if(tiling.begin(),tiling.end(),[](const int s) { return s>0; });t_iter!=tiling.end();) {
     const uint8_t static_swap=*t_iter;
-    for(uint8_t cyclic = 0; cyclic< (model_params::DETERMINISM_LEVEL==3?4:1); ++cyclic) {
-      const uint8_t pre_swap=model_params::DETERMINISM_LEVEL==3 ? (static_swap-(static_swap-1)%4)+((static_swap-1)%4+cyclic)%4 : static_swap;
+    for(uint8_t cyclic = 0; cyclic< (Phenotype::DETERMINISM_LEVEL==3?4:1); ++cyclic) {
+      const uint8_t pre_swap=Phenotype::DETERMINISM_LEVEL==3 ? (static_swap-(static_swap-1)%4)+((static_swap-1)%4+cyclic)%4 : static_swap;
       std::replace(tiling.begin(),tiling.end(),swap_count,uint8_t(255));
       std::replace(tiling.begin(),tiling.end(),pre_swap,swap_count);
       std::replace(tiling.begin(),tiling.end(),uint8_t(255),pre_swap);
       ++swap_count;
     }  
-    t_iter=std::find_if(tiling.begin(),tiling.end(),[swap_count](const int s) { return (s>0 && (model_params::DETERMINISM_LEVEL==3?s-(s-1)%4:s) >= swap_count); });
+    t_iter=std::find_if(tiling.begin(),tiling.end(),[swap_count](const int s) { return (s>0 && (Phenotype::DETERMINISM_LEVEL==3?s-(s-1)%4:s) >= swap_count); });
   }
 }
 
@@ -110,12 +104,12 @@ inline void GetMinPhenRepresentation(Phenotype& phen) {
   if(phen.dy > phen.dx)
     ClockwiseRotation(phen);
   
-  for(uint8_t rot=0;rot<model_params::FREE_POLYOMINO;++rot) {
+  for(uint8_t flip=0;flip<=Phenotype::FREE_POLYOMINO;++flip) {
     MinimizePhenRep(phen.tiling);
     min_tilings.emplace_back(phen.tiling);
       
     if(phen.dy != phen.dx) {
-      ClockwisePiRotation(phen);
+      std::reverse(phen.tiling.begin(),phen.tiling.end());
       MinimizePhenRep(phen.tiling);
       min_tilings.emplace_back(phen.tiling);
     }
@@ -126,58 +120,14 @@ inline void GetMinPhenRepresentation(Phenotype& phen) {
         min_tilings.emplace_back(phen.tiling);
       }
     }
-    if(rot==(model_params::FREE_POLYOMINO-1))
+    if(!Phenotype::FREE_POLYOMINO)
       break;
     ChiralFlip(phen);
   }
-  std::nth_element(min_tilings.begin(),min_tilings.begin(),min_tilings.end());
-  phen.tiling=min_tilings.front();
+  phen.tiling=*std::min_element(min_tilings.begin(),min_tilings.end());
 }
 
-inline bool ComparePolyominoes(Phenotype& phen1, const Phenotype& phen2) {
-  if(phen1.dy > phen1.dx)
-    ClockwiseRotation(phen1);
-  MinimizePhenRep(phen1.tiling);
-
-  /*! test same size of phenotypes*/
-  if(phen1.tiling.size()!=phen2.tiling.size() || std::count(phen1.tiling.begin(),phen1.tiling.end(),0)!=std::count(phen2.tiling.begin(),phen2.tiling.end(),0))
-    return false; 
-  
-  /*! square phenotypes*/
-  if(phen1.dx==phen2.dx && phen1.dy==phen2.dy && phen1.dx==phen2.dy) {
-    for(uint8_t flip=0; flip<model_params::FREE_POLYOMINO;++flip) {
-      if(phen1.tiling==phen2.tiling) 
-        return true;
-      for(int rotation=0;rotation<3;++rotation) {
-        ClockwiseRotation(phen1);
-        MinimizePhenRep(phen1.tiling);
-        if(phen1.tiling==phen2.tiling) 
-          return true;
-      }
-      if(flip==(model_params::FREE_POLYOMINO-1))
-        return false; //square phenotype, but never matching
-      ChiralFlip(phen1);
-      MinimizePhenRep(phen1.tiling);
-    }
-  }
-  /*! rectangular phenotypes*/
-  if(phen1.dx==phen2.dx && phen1.dy==phen2.dy) {
-    for(uint8_t flip=0; flip<model_params::FREE_POLYOMINO;++flip) {
-      if(phen1.tiling==phen2.tiling)
-        return true;
-      ClockwisePiRotation(phen1);
-      MinimizePhenRep(phen1.tiling);
-      if(phen1.tiling==phen2.tiling)
-        return true;
-      if(flip==(model_params::FREE_POLYOMINO-1))
-        return false; //rectangular phenotype, but never matching
-      ChiralFlip(phen1);
-      MinimizePhenRep(phen1.tiling);
-    }
-  }
-  return false; //catch all
-}
-
+ 
 inline Phenotype GetPhenotypeFromGrid(std::vector<int8_t>& placed_tiles) {
   std::vector<int8_t> x_locs, y_locs,tile_vals;
   x_locs.reserve(placed_tiles.size()/3);y_locs.reserve(placed_tiles.size()/3);tile_vals.reserve(placed_tiles.size()/3);
@@ -195,7 +145,7 @@ inline Phenotype GetPhenotypeFromGrid(std::vector<int8_t>& placed_tiles) {
   
   for(uint16_t tileIndex=0;tileIndex<x_locs.size();++tileIndex) {
     uint8_t tile_detail=0;
-    switch(model_params::DETERMINISM_LEVEL) {
+    switch(Phenotype::DETERMINISM_LEVEL) {
     case 1:
       tile_detail=tile_vals[tileIndex] > 0 ? 1 : 0;
       break;
@@ -207,92 +157,85 @@ inline Phenotype GetPhenotypeFromGrid(std::vector<int8_t>& placed_tiles) {
     }
     spatial_grid[(*y_top-y_locs[tileIndex])*dx + (x_locs[tileIndex]-*x_left)]=tile_detail;
   }
-  return Phenotype{dx,dy,spatial_grid};
+  Phenotype phen{dx,dy,spatial_grid};
+  GetMinPhenRepresentation(phen);
+  return phen;
 }
- 
 
 struct PhenotypeTable {
+  bool FIXED_TABLE=false;
   std::unordered_map<uint8_t,std::vector<Phenotype> > known_phenotypes;
   
-  inline Phenotype_ID GetPhenotypeID(Phenotype& phen);
-  inline void RelabelPhenotypes(std::vector<Phenotype_ID >& pids);
-  inline std::map<Phenotype_ID,uint16_t> PhenotypeFrequencies(std::vector<Phenotype_ID >& pids,const Phenotype_ID RARE_pid=NULL_pid);
-  inline void PrintTable(std::ofstream& fout);
+  inline Phenotype_ID GetPhenotypeID(Phenotype& phen) {
+    uint8_t phenotype_size=std::count_if(phen.tiling.begin(),phen.tiling.end(),[](const int c){return c != 0;});
+    
+    //compare against existing table entries
+    for(size_t phenotype_index=0; phenotype_index != known_phenotypes[phenotype_size].size();++phenotype_index)
+      if(phen==known_phenotypes[phenotype_size][phenotype_index]) 
+        return Phenotype_ID{phenotype_size,phenotype_index};
+    if(FIXED_TABLE)
+      return NULL_pid;
+  
+    //compare against temporary table entries
+    uint16_t new_phenotype_index=0;
+    for(Phenotype phen_p : undiscovered_phenotypes[phenotype_size])
+      if(phen==phen_p)
+        goto found_phen;
+
+    undiscovered_phenotypes[phenotype_size].emplace_back(phen);
+    undiscovered_phenotype_counts[phenotype_size].emplace_back(1);
+
+  found_phen:
+    return Phenotype_ID{phenotype_size,known_phenotypes[phenotype_size].size()+new_phenotype_index+model_params::phenotype_builds};
+  }
+  
+  inline void RelabelPhenotypes(std::vector<Phenotype_ID >& pids) {
+    for(auto& kv : undiscovered_phenotype_counts)
+      for(size_t nth=0; nth<kv.second.size(); ++nth)
+        if(kv.second[nth] >= std::ceil(model_params::UND_threshold*model_params::phenotype_builds)) {
+          std::replace(pids.begin(),pids.end(),Phenotype_ID{kv.first,nth},Phenotype_ID{kv.first,known_phenotypes[kv.first].size()});
+          known_phenotypes[kv.first].emplace_back(undiscovered_phenotypes[kv.first][nth]);
+        }
+    undiscovered_phenotypes.clear();
+    undiscovered_phenotype_counts.clear();
+  }
+  
+  inline std::map<Phenotype_ID,uint16_t> PhenotypeFrequencies(std::vector<Phenotype_ID >& pids,const Phenotype_ID RARE_pid=NULL_pid) {
+    std::map<Phenotype_ID, uint16_t> ID_counter;
+    for(std::vector<Phenotype_ID >::const_iterator ID_iter = pids.begin(); ID_iter!=pids.end(); ++ID_iter) {
+      if(ID_iter->second < known_phenotypes[ID_iter->first].size())
+        ++ID_counter[Phenotype_ID{ID_iter->first,ID_iter->second}];
+      else
+        ++ID_counter[RARE_pid];
+    }
+    return ID_counter;
+  }
+
+  inline void LoadTable(std::ifstream& fin) {
+    std::string temp;
+    while (std::getline(fin, temp)) {
+      std::istringstream buffer(temp);
+      std::vector<uint8_t> vec{std::istream_iterator<double>(buffer), std::istream_iterator<double>()};
+      
+      uint8_t phenotype_size=std::count_if(vec.begin()+2,vec.end(),[](const int c){return c != 0;});
+      known_phenotypes[phenotype_size].emplace_back(vec[0],vec[1],std::vector<uint8_t>{vec.begin()+2,vec.end()});
+    }
+  }
+    
+  inline void PrintTable(std::ofstream& fout) {
+    for(auto known_phens : known_phenotypes) {
+      uint16_t n_phen=0;
+      for(Phenotype known : known_phens.second) {
+        fout<<+known_phens.first<<" "<<+n_phen++<<" "<<+known.dx<<" "<<+known.dy<<" ";
+        for(uint8_t tile : known.tiling)
+          fout<<+tile<<" ";
+        fout<<"\n";
+      }
+    }
+  }
   
 protected:
   std::unordered_map<uint8_t,std::vector<Phenotype>> undiscovered_phenotypes;
-  std::vector<size_t> new_phenotype_xfer;
   std::unordered_map<uint8_t, std::vector<uint16_t>> undiscovered_phenotype_counts;
 
 };
-
-Phenotype_ID PhenotypeTable::GetPhenotypeID(Phenotype& phen) {
-  uint8_t phenotype_size=std::count_if(phen.tiling.begin(),phen.tiling.end(),[](const int c){return c != 0;});
-    
-    /*! compare against existing table entries*/
-    for(uint16_t phenotype_index=0; phenotype_index != known_phenotypes[phenotype_size].size();++phenotype_index)
-      if(ComparePolyominoes(phen,known_phenotypes[phenotype_size][phenotype_index])) 
-	return std::make_pair(phenotype_size,phenotype_index);
-    if(model_params::FIXED_TABLE)
-      return NULL_pid;
-    /*! compare against temporary table entries*/
-    uint16_t new_phenotype_index=0;
-    for(Phenotype phen_p : undiscovered_phenotypes[phenotype_size]) {
-      if(ComparePolyominoes(phen,phen_p)) {
-	if(++undiscovered_phenotype_counts[phenotype_size][new_phenotype_index]>=std::ceil(model_params::UND_threshold*model_params::phenotype_builds)) {
-	  known_phenotypes[phenotype_size].emplace_back(phen);
-          new_phenotype_xfer.insert(new_phenotype_xfer.end(),{phenotype_size,known_phenotypes[phenotype_size].size()-1+new_phenotype_index+model_params::phenotype_builds,known_phenotypes[phenotype_size].size()-1});            
-	  return std::make_pair(phenotype_size,known_phenotypes[phenotype_size].size()-1);
-	}
-	else
-	  return std::make_pair(phenotype_size,known_phenotypes[phenotype_size].size()+new_phenotype_index+model_params::phenotype_builds);
-      }
-      ++new_phenotype_index;
-    }
-
-    /*! brand new phenotype, get minimal representation and add to temporary table (or existing if limit was 1) */
-    GetMinPhenRepresentation(phen);
-    if(static_cast<uint16_t>(std::ceil(model_params::UND_threshold*model_params::phenotype_builds))<=1) {
-      known_phenotypes[phenotype_size].emplace_back(phen);
-      new_phenotype_xfer.insert(new_phenotype_xfer.end(),{phenotype_size,known_phenotypes[phenotype_size].size()-1,known_phenotypes[phenotype_size].size()-1});    
-      return std::make_pair(phenotype_size,known_phenotypes[phenotype_size].size()-1);
-    }
-    
-    undiscovered_phenotypes[phenotype_size].emplace_back(phen);
-    undiscovered_phenotype_counts[phenotype_size].emplace_back(1);
-    return std::make_pair(phenotype_size,known_phenotypes[phenotype_size].size()+new_phenotype_index+model_params::phenotype_builds);
-}
-
-void PhenotypeTable::RelabelPhenotypes(std::vector<Phenotype_ID >& pids) {
-  /*! relabels stored in tuple (size, swap_from, swap_to) */
-  for(auto x_iter=new_phenotype_xfer.begin(); x_iter!=new_phenotype_xfer.end();x_iter+=3)
-    std::replace(pids.begin(),pids.end(),std::make_pair(static_cast<uint8_t>(*x_iter),static_cast<uint16_t>(*(x_iter+1))),std::make_pair(static_cast<uint8_t>(*x_iter),static_cast<uint16_t>(*(x_iter+2))));
-	
-  undiscovered_phenotypes.clear();
-  undiscovered_phenotype_counts.clear();
-  new_phenotype_xfer.clear();
-}
-
-std::map<Phenotype_ID,uint16_t> PhenotypeTable::PhenotypeFrequencies(std::vector<Phenotype_ID >& pids,const Phenotype_ID RARE_pid) {
-  std::map<Phenotype_ID, uint16_t> ID_counter;
-  for(std::vector<Phenotype_ID >::const_iterator ID_iter = pids.begin(); ID_iter!=pids.end(); ++ID_iter) {
-    if(ID_iter->second < known_phenotypes[ID_iter->first].size())
-      ++ID_counter[std::make_pair(ID_iter->first,ID_iter->second)];
-    else
-      ++ID_counter[RARE_pid];
-  }
-  return ID_counter;
-}
-
-
-void PhenotypeTable::PrintTable(std::ofstream& fout) {
-  for(auto known_phens : known_phenotypes) {
-    uint16_t n_phen=0;
-    for(Phenotype known : known_phens.second) {
-      fout<<+known_phens.first<<" "<<+n_phen++<<" "<<+known.dx<<" "<<+known.dy<<" ";
-      for(uint8_t tile : known.tiling)
-	fout<<+tile<<" ";
-      fout<<"\n";
-    }
-  }
-}

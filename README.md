@@ -15,11 +15,11 @@ class NewAssemblyModel : public PolyominoAssembly<NewAssemblyModel>
 ```
   - implement the interaction matrix that returns the interaction strength between two interfaces
 ```
-double InteractionMatrix(typename A, typename B)
+double NewAssemblyModel::InteractionMatrix(typename A, typename B)
 ```
   - implement any specific methods
-    - Mutations
-    - interaction matrix related calculations
+    - mutations
+    - random initilising
 
 ## Building
 The core library is header only, so need to add an include path

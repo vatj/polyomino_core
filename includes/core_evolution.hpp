@@ -10,14 +10,46 @@ struct FitnessPhenotypeTable : PhenotypeTable {
   std::unordered_map<uint8_t,std::vector<double> > phenotype_fitnesses{{0,{0}}};
   std::function<double(uint8_t)> fit_func;
   FitnessPhenotypeTable(void) {fit_func=[](double s) {return std::gamma_distribution<double>(s*2,.5*std::pow(s,-.5))(RNG_Engine);};};
-         
-  inline void RelabelPhenotypes(std::vector<Phenotype_ID >& pids,std::map<Phenotype_ID, std::set<interaction_pair> >& p_ints);
-  inline double GenotypeFitness(std::map<Phenotype_ID,uint16_t> ID_counter);
-  inline double SingleFitness(Phenotype_ID pid,uint16_t commonness);
-  inline void ExtendFitness();
 
+  //if a phenotype is newly discovered, relabel temporary indexing into new pID
+  inline void RelabelPhenotypes(std::vector<Phenotype_ID >& pids,std::map<Phenotype_ID, std::set<InteractionPair> >& p_ints)  {
+    //add new fitnesses if there are new phenotypes
+    for(auto& kv : undiscovered_phenotype_counts)
+      for(size_t nth=0; nth<kv.second.size(); ++nth)
+        if(kv.second[nth] >= std::ceil(model_params::UND_threshold*model_params::phenotype_builds)) {
+          phenotype_fitnesses[kv.first].emplace_back(fit_func(kv.first));
+          p_ints[Phenotype_ID{kv.first,known_phenotypes[kv.first].size()}]=p_ints[Phenotype_ID{kv.first,nth}];
+          std::replace(pids.begin(),pids.end(),Phenotype_ID{kv.first,nth},Phenotype_ID{kv.first,known_phenotypes[kv.first].size()});
+          known_phenotypes[kv.first].emplace_back(undiscovered_phenotypes[kv.first][nth]);
+        }
+
+    undiscovered_phenotypes.clear();
+    undiscovered_phenotype_counts.clear();
+
+  }
+  
+  inline double GenotypeFitness(std::map<Phenotype_ID,uint16_t> ID_counter) {
+    double fitness=0;
+    for(auto kv : ID_counter)
+      if(kv.second>=ceil(model_params::UND_threshold*model_params::phenotype_builds))
+        fitness+=phenotype_fitnesses[kv.first.first][kv.first.second] * std::pow(static_cast<double>(kv.second)/model_params::phenotype_builds,simulation_params::fitness_factor);
+    return fitness;
+  }
+  
+  inline double SingleFitness(Phenotype_ID pid,uint16_t commonness) {
+    return phenotype_fitnesses[pid.first][pid.second] * std::pow(static_cast<double>(commonness)/model_params::phenotype_builds,simulation_params::fitness_factor);     
+  }
+  
+  inline void LoadTable(std::ifstream& fin) {
+    PhenotypeTable::LoadTable(fin);
+    for(auto& kv : known_phenotypes)
+      phenotype_fitnesses[kv.first].insert(phenotype_fitnesses[kv.first].end(),kv.second.size(),0); 
+  }
+  
+    
 };
 
+//fitness proportional selection, or random selection if net zero fitness
 inline std::vector<uint16_t> RouletteWheelSelection(std::vector<double>& fitnesses) {
   std::vector<uint16_t> selected_indices(fitnesses.size());
   std::partial_sum(fitnesses.begin(), fitnesses.end(), fitnesses.begin());
@@ -32,34 +64,3 @@ inline std::vector<uint16_t> RouletteWheelSelection(std::vector<double>& fitness
   }
   return selected_indices;
 }
-
-void FitnessPhenotypeTable::ExtendFitness() {
-  for(auto x_iter=new_phenotype_xfer.begin();x_iter!=new_phenotype_xfer.end();) {
-    phenotype_fitnesses[*x_iter].emplace_back(fit_func(*x_iter));
-    if(*(x_iter+1)==*(x_iter+2))
-      x_iter=new_phenotype_xfer.erase(x_iter,x_iter+3);
-    else
-      x_iter+=3;
-  }
-}
- 
-void FitnessPhenotypeTable::RelabelPhenotypes(std::vector<Phenotype_ID >& pids,std::map<Phenotype_ID, std::set<interaction_pair> >& p_ints)  {
-  for(auto x_iter=new_phenotype_xfer.begin();x_iter!=new_phenotype_xfer.end();x_iter+=3)
-    p_ints[std::make_pair(*x_iter,*(x_iter+2))].insert(p_ints[std::make_pair(*x_iter,*(x_iter+1))].begin(),p_ints[std::make_pair(*x_iter,*(x_iter+1))].end());
-  PhenotypeTable::RelabelPhenotypes(pids);
-}
-
-double FitnessPhenotypeTable::GenotypeFitness(std::map<Phenotype_ID,uint16_t> ID_counter) {
-  double fitness=0;
-  for(auto kv : ID_counter)
-    if(kv.second>=ceil(model_params::UND_threshold*model_params::phenotype_builds))
-      fitness+=phenotype_fitnesses[kv.first.first][kv.first.second] * std::pow(static_cast<double>(kv.second)/model_params::phenotype_builds,simulation_params::fitness_factor);
-  return fitness;
-}
-
-double FitnessPhenotypeTable::SingleFitness(Phenotype_ID pid,uint16_t commonness)  {
-  return phenotype_fitnesses[pid.first][pid.second] * std::pow(static_cast<double>(commonness)/model_params::phenotype_builds,simulation_params::fitness_factor);     
-}
-
-
-
