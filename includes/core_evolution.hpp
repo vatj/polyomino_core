@@ -2,11 +2,10 @@
 #include <functional>
 #include <algorithm>
 
-namespace simulation_params {
-  extern double fitness_factor; 
-}
 
 struct FitnessPhenotypeTable : PhenotypeTable {
+  inline static double fitness_factor=1;
+
   std::unordered_map<uint8_t,std::vector<double> > phenotype_fitnesses{{0,{0}}};
   std::function<double(uint8_t)> fit_func;
   FitnessPhenotypeTable(void) {fit_func=[](double s) {return std::gamma_distribution<double>(s*2,.5*std::pow(s,-.5))(RNG_Engine);};};
@@ -16,7 +15,7 @@ struct FitnessPhenotypeTable : PhenotypeTable {
     //add new fitnesses if there are new phenotypes
     for(auto& kv : undiscovered_phenotype_counts)
       for(size_t nth=0; nth<kv.second.size(); ++nth)
-        if(kv.second[nth] >= std::ceil(model_params::UND_threshold*model_params::phenotype_builds)) {
+        if(kv.second[nth] >= std::ceil(UND_threshold*phenotype_builds)) {
           phenotype_fitnesses[kv.first].emplace_back(fit_func(kv.first));
           p_ints[Phenotype_ID{kv.first,known_phenotypes[kv.first].size()}]=p_ints[Phenotype_ID{kv.first,nth}];
           std::replace(pids.begin(),pids.end(),Phenotype_ID{kv.first,nth},Phenotype_ID{kv.first,known_phenotypes[kv.first].size()});
@@ -31,13 +30,13 @@ struct FitnessPhenotypeTable : PhenotypeTable {
   inline double GenotypeFitness(std::map<Phenotype_ID,uint16_t> ID_counter) {
     double fitness=0;
     for(auto kv : ID_counter)
-      if(kv.second>=ceil(model_params::UND_threshold*model_params::phenotype_builds))
-        fitness+=phenotype_fitnesses[kv.first.first][kv.first.second] * std::pow(static_cast<double>(kv.second)/model_params::phenotype_builds,simulation_params::fitness_factor);
+      if(kv.second>=ceil(UND_threshold*phenotype_builds))
+        fitness+=phenotype_fitnesses[kv.first.first][kv.first.second] * std::pow(static_cast<double>(kv.second)/phenotype_builds,fitness_factor);
     return fitness;
   }
   
   inline double SingleFitness(Phenotype_ID pid,uint16_t commonness) {
-    return phenotype_fitnesses[pid.first][pid.second] * std::pow(static_cast<double>(commonness)/model_params::phenotype_builds,simulation_params::fitness_factor);     
+    return phenotype_fitnesses[pid.first][pid.second] * std::pow(static_cast<double>(commonness)/phenotype_builds,fitness_factor);     
   }
   
   inline void LoadTable(std::ifstream& fin) {

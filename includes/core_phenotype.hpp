@@ -24,11 +24,6 @@ determinism levels as follows:
     orientation : 3
 */
 
-namespace model_params
-{
-  extern double UND_threshold;
-  extern uint16_t phenotype_builds;
-}
 
 /*! phenotype definitions */
 using Phenotype_ID = std::pair<uint8_t,uint16_t>;
@@ -44,8 +39,8 @@ struct Phenotype {
   {
     return this->dx==rhs.dx && this->dy==rhs.dy && this->tiling==rhs.tiling;
   }
-  static bool FREE_POLYOMINO;
-  static uint8_t DETERMINISM_LEVEL;
+  inline static bool FREE_POLYOMINO=true;
+  inline static uint8_t DETERMINISM_LEVEL=3;
 };
 
 
@@ -153,6 +148,8 @@ inline Phenotype GetPhenotypeFromGrid(std::vector<int8_t>& placed_tiles) {
       tile_detail=tile_vals[tileIndex] > 0 ? (tile_vals[tileIndex]-1)/4+1 : 0;
       break;
     case 3:
+	[[fallthrough]]
+    default:
       tile_detail=tile_vals[tileIndex];
     }
     spatial_grid[(*y_top-y_locs[tileIndex])*dx + (x_locs[tileIndex]-*x_left)]=tile_detail;
@@ -164,6 +161,9 @@ inline Phenotype GetPhenotypeFromGrid(std::vector<int8_t>& placed_tiles) {
 
 struct PhenotypeTable {
   bool FIXED_TABLE=false;
+  inline static double UND_threshold=0;
+  inline static uint16_t phenotype_builds=10;
+
   std::unordered_map<uint8_t,std::vector<Phenotype> > known_phenotypes;
   
   inline Phenotype_ID GetPhenotypeID(Phenotype& phen) {
@@ -186,13 +186,13 @@ struct PhenotypeTable {
     undiscovered_phenotype_counts[phenotype_size].emplace_back(1);
 
   found_phen:
-    return Phenotype_ID{phenotype_size,known_phenotypes[phenotype_size].size()+new_phenotype_index+model_params::phenotype_builds};
+    return Phenotype_ID{phenotype_size,known_phenotypes[phenotype_size].size()+new_phenotype_index+phenotype_builds};
   }
   
   inline void RelabelPhenotypes(std::vector<Phenotype_ID >& pids) {
     for(auto& kv : undiscovered_phenotype_counts)
       for(size_t nth=0; nth<kv.second.size(); ++nth)
-        if(kv.second[nth] >= std::ceil(model_params::UND_threshold*model_params::phenotype_builds)) {
+        if(kv.second[nth] >= std::ceil(UND_threshold*phenotype_builds)) {
           std::replace(pids.begin(),pids.end(),Phenotype_ID{kv.first,nth},Phenotype_ID{kv.first,known_phenotypes[kv.first].size()});
           known_phenotypes[kv.first].emplace_back(undiscovered_phenotypes[kv.first][nth]);
         }
