@@ -2,7 +2,6 @@
 #include <functional>
 #include <algorithm>
 
-
 struct FitnessPhenotypeTable : PhenotypeTable {
   inline static double fitness_factor=1;
 
@@ -43,8 +42,7 @@ struct FitnessPhenotypeTable : PhenotypeTable {
     PhenotypeTable::LoadTable(fin);
     for(auto& kv : known_phenotypes)
       phenotype_fitnesses[kv.first].insert(phenotype_fitnesses[kv.first].end(),kv.second.size(),0); 
-  }
-  
+  }  
     
 };
 

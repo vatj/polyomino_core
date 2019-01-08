@@ -9,8 +9,7 @@
 #include <array>
 #include <random>
 
-
-extern thread_local std::mt19937 RNG_Engine;
+thread_local static inline std::mt19937 RNG_Engine(std::random_device{}());
 
 using InteractionPair = std::pair<uint8_t,uint8_t>;
 
@@ -134,7 +133,6 @@ public:
           ++iter;
         }
       }
-      /*! find all above threshold bindings and add to new sites */
     nextloop: ; //continue if site already occupied
     }   
   }

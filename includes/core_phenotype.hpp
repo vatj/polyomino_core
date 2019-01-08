@@ -35,22 +35,21 @@ struct Phenotype {
 
   Phenotype(uint8_t tdx=1, uint8_t tdy=1, std::vector<uint8_t> tt={1}) {dx=tdx;dy=tdy;tiling=tt;}
   
-  bool operator==(const Phenotype& rhs)
-  {
-    return this->dx==rhs.dx && this->dy==rhs.dy && this->tiling==rhs.tiling;
-  }
+  bool operator==(const Phenotype& rhs) {return this->dx==rhs.dx && this->dy==rhs.dy && this->tiling==rhs.tiling;}
+  
   inline static bool FREE_POLYOMINO=true;
   inline static uint8_t DETERMINISM_LEVEL=3;
+  inline friend std::ostream& operator<<(std::ostream& out, Phenotype& phen);
+  
 };
-
-
-inline void PrintShape(Phenotype& phen) {
+inline std::ostream & operator<<(std::ostream& os,Phenotype& phen) {
+  os << "Phenotype dx: " << +phen.dx<<", dy:  " << +phen.dy << "\n";
   for(uint8_t y=0;y<phen.dy;++y) {
     for(uint8_t x=0;x<phen.dx;++x)
-      std::cout<<+phen.tiling[y*phen.dx+x]<<" ";
-    std::cout<<"\n";
+      os << +phen.tiling[y*phen.dx+x] << " ";
+    os << "\n";
   }
-  std::cout<<"\n";
+  return os;
 }
 
 inline void ClockwiseRotation(Phenotype& phen) {
