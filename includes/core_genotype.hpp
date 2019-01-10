@@ -5,9 +5,9 @@
 #include <algorithm>
 #include <tuple>
 #include <set>
-
 #include <array>
 #include <random>
+#include <functional>
 
 thread_local static inline std::mt19937 RNG_Engine(std::random_device{}());
 
@@ -23,7 +23,14 @@ template<class Q> //Curiously recurring template pattern
 class PolyominoAssembly {
 public:
   inline static bool free_seed=true;
-
+  
+  template<typename T, typename A>
+  static void RandomiseGenotype(std::vector<T,A>& genotype) {
+  do {
+    std::generate(genotype.begin(),genotype.end(),Q::GenRandomSite);
+  }while(!Q::GetActiveInterfaces(genotype).empty());
+}
+  
   //strip all subunits which cannot interact with initial subunit
   template<typename T, typename A>
   static void StripNoncodingGenotype(std::vector<T,A>& genotype) {
