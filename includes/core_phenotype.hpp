@@ -189,12 +189,14 @@ struct PhenotypeTable {
   }
   
   inline void RelabelPhenotypes(std::vector<Phenotype_ID >& pids) {
-    for(auto& kv : undiscovered_phenotype_counts)
+    
+    for(auto& kv : undiscovered_phenotype_counts) {
+      const size_t table_size=known_phenotypes[kv.first].size(); 
       for(size_t nth=0; nth<kv.second.size(); ++nth)
-        if(kv.second[nth] >= std::ceil(UND_threshold*phenotype_builds)) {
-          std::replace(pids.begin(),pids.end(),Phenotype_ID{kv.first,nth},Phenotype_ID{kv.first,known_phenotypes[kv.first].size()});
+        if(kv.second[nth] >= std::ceil(UND_threshold*phenotype_builds)) { std::replace(pids.begin(),pids.end(),Phenotype_ID{kv.first,table_size+phenotype_builds+nth},Phenotype_ID{kv.first,known_phenotypes[kv.first].size()});
           known_phenotypes[kv.first].emplace_back(undiscovered_phenotypes[kv.first][nth]);
         }
+    }
     undiscovered_phenotypes.clear();
     undiscovered_phenotype_counts.clear();
   }
