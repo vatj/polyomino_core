@@ -51,6 +51,11 @@ inline std::ostream & operator<<(std::ostream& os,Phenotype& phen) {
   }
   return os;
 }
+inline std::ostream & operator<<(std::ostream& os,Phenotype_ID& pid) {
+  os <<"pID: "<< +pid.first<<", " << +pid.second;
+  return os;
+}
+
 
 inline void ClockwiseRotation(Phenotype& phen) {
   std::vector<uint8_t> swapper;
@@ -178,8 +183,10 @@ struct PhenotypeTable {
     //compare against temporary table entries
     uint16_t new_phenotype_index=0;
     for(Phenotype phen_p : undiscovered_phenotypes[phenotype_size])
-      if(phen==phen_p)
+      if(phen==phen_p) {
+        ++undiscovered_phenotype_counts[phenotype_size][new_phenotype_index];
         goto found_phen;
+}
 
     undiscovered_phenotypes[phenotype_size].emplace_back(phen);
     undiscovered_phenotype_counts[phenotype_size].emplace_back(1);
@@ -189,7 +196,6 @@ struct PhenotypeTable {
   }
   
   inline void RelabelPhenotypes(std::vector<Phenotype_ID >& pids) {
-    
     for(auto& kv : undiscovered_phenotype_counts) {
       const size_t table_size=known_phenotypes[kv.first].size(); 
       for(size_t nth=0; nth<kv.second.size(); ++nth)
