@@ -27,7 +27,7 @@ determinism levels as follows:
 
 /*! phenotype definitions */
 using Phenotype_ID = std::pair<uint8_t,uint16_t>;
-constexpr Phenotype_ID NULL_pid{0,0},ND_pid{1,0};
+constexpr Phenotype_ID NULL_pid{0,0},UNBOUND_pid{255,0};
 
 struct Phenotype {
   uint8_t dx,dy;
@@ -199,7 +199,8 @@ struct PhenotypeTable {
     for(auto& kv : undiscovered_phenotype_counts) {
       const size_t table_size=known_phenotypes[kv.first].size(); 
       for(size_t nth=0; nth<kv.second.size(); ++nth)
-        if(kv.second[nth] >= std::ceil(UND_threshold*phenotype_builds)) { std::replace(pids.begin(),pids.end(),Phenotype_ID{kv.first,table_size+phenotype_builds+nth},Phenotype_ID{kv.first,known_phenotypes[kv.first].size()});
+        if(kv.second[nth] >= std::ceil(UND_threshold*phenotype_builds)) {
+          std::replace(pids.begin(),pids.end(),Phenotype_ID{kv.first,table_size+phenotype_builds+nth},Phenotype_ID{kv.first,known_phenotypes[kv.first].size()});
           known_phenotypes[kv.first].emplace_back(undiscovered_phenotypes[kv.first][nth]);
         }
     }
@@ -209,12 +210,15 @@ struct PhenotypeTable {
   
   inline std::map<Phenotype_ID,uint16_t> PhenotypeFrequencies(std::vector<Phenotype_ID >& pids,const Phenotype_ID RARE_pid=NULL_pid) {
     std::map<Phenotype_ID, uint16_t> ID_counter;
-    for(std::vector<Phenotype_ID >::const_iterator ID_iter = pids.begin(); ID_iter!=pids.end(); ++ID_iter) {
-      if(ID_iter->second < known_phenotypes[ID_iter->first].size())
-        ++ID_counter[Phenotype_ID{ID_iter->first,ID_iter->second}];
-      else
+    for(auto pid  : pids)
+      ++ID_counter[pid];
+    for(std::map<Phenotype_ID,uint16_t>::iterator map_it=ID_counter.begin(); map_it!=ID_counter.end();++map_it) {
+      if(map_it->second < std::ceil(UND_threshold*phenotype_builds)) {
         ++ID_counter[RARE_pid];
+        ID_counter.erase(map_it);
+      }
     }
+       
     return ID_counter;
   }
 
