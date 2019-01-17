@@ -32,8 +32,7 @@ struct FitnessPhenotypeTable : PhenotypeTable {
   
   inline double GenotypeFitness(std::map<Phenotype_ID,uint16_t> ID_counter) {
     double fitness=0;
-    for(auto kv : ID_counter)
-      if(kv.second>=ceil(UND_threshold*phenotype_builds))
+    for(auto& kv : ID_counter)
         fitness+=phenotype_fitnesses[kv.first.first][kv.first.second] * std::pow(static_cast<double>(kv.second)/phenotype_builds,fitness_factor);
     return fitness;
   }

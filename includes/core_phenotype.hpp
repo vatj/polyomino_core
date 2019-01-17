@@ -209,17 +209,22 @@ struct PhenotypeTable {
   }
   
   inline std::map<Phenotype_ID,uint16_t> PhenotypeFrequencies(std::vector<Phenotype_ID >& pids,const Phenotype_ID RARE_pid=NULL_pid) {
-    std::map<Phenotype_ID, uint16_t> ID_counter;
-    for(auto pid  : pids)
-      ++ID_counter[pid];
+    std::map<Phenotype_ID, uint16_t> ID_counter;  
+    
+    for(std::vector<Phenotype_ID >::const_iterator ID_iter = pids.begin(); ID_iter!=pids.end(); ++ID_iter) {
+      if(ID_iter->second < known_phenotypes[ID_iter->first].size())
+        ++ID_counter[*ID_iter];
+      else
+        ++ID_counter[RARE_pid];
+    }
     for(std::map<Phenotype_ID,uint16_t>::iterator map_it=ID_counter.begin(); map_it!=ID_counter.end();++map_it) {
-      if(map_it->second < std::ceil(UND_threshold*phenotype_builds)) {
+      if(map_it->second < std::ceil(UND_threshold*phenotype_builds) && map_it->first!=RARE_pid) {
         ++ID_counter[RARE_pid];
         ID_counter.erase(map_it);
       }
     }
-       
-    return ID_counter;
+      
+    return ID_counter;    
   }
 
   inline void LoadTable(std::ifstream& fin) {
