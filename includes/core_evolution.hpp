@@ -10,21 +10,18 @@ struct FitnessPhenotypeTable : PhenotypeTable {
   FitnessPhenotypeTable(void) {fit_func=[](double s) {return std::gamma_distribution<double>(s*2,.5*std::pow(s,-.5))(RNG_Engine);};};
 
   //if a phenotype is newly discovered, relabel temporary indexing into new pID
-  inline void RelabelPhenotypes(std::vector<Phenotype_ID >& pids,std::map<Phenotype_ID, std::set<InteractionPair> >& p_ints)  {
-    //add new fitnesses if there are new phenotypes
-
+  inline void RelabelPhenotypes(std::vector<Phenotype_ID >& pids,std::map<Phenotype_ID, std::set<InteractionPair> >& p_ints) {
+    const uint16_t thresh_val=std::ceil(UND_threshold*phenotype_builds);
     for(auto& kv : undiscovered_phenotype_counts) {
       const size_t table_size=known_phenotypes[kv.first].size(); 
-      for(size_t nth=0; nth<kv.second.size(); ++nth) {
-        if(kv.second[nth] >= std::ceil(UND_threshold*phenotype_builds)) {
+      for(size_t nth=0; nth<kv.second.size(); ++nth)
+        if(kv.second[nth] >= thresh_val) {
           phenotype_fitnesses[kv.first].emplace_back(fit_func(kv.first));
           p_ints[Phenotype_ID{kv.first,known_phenotypes[kv.first].size()}]=p_ints[Phenotype_ID{kv.first,table_size+phenotype_builds+nth}];
           std::replace(pids.begin(),pids.end(),Phenotype_ID{kv.first,table_size+phenotype_builds+nth},Phenotype_ID{kv.first,known_phenotypes[kv.first].size()});
           known_phenotypes[kv.first].emplace_back(undiscovered_phenotypes[kv.first][nth]);
         }
-      }
-    }    
-
+    }
     undiscovered_phenotypes.clear();
     undiscovered_phenotype_counts.clear();
 
@@ -49,7 +46,7 @@ struct FitnessPhenotypeTable : PhenotypeTable {
     
 };
 
-//fitness proportional selection, or random selection if net zero fitness
+//fitness proportional selection, or equal selection if net zero fitness
 inline std::vector<uint16_t> RouletteWheelSelection(std::vector<double>& fitnesses) {
   std::vector<uint16_t> selected_indices(fitnesses.size());
   std::partial_sum(fitnesses.begin(), fitnesses.end(), fitnesses.begin());
