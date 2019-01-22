@@ -231,7 +231,8 @@ struct PhenotypeTable {
     return ID_counter;    
   }
 
-  inline void LoadTable(std::ifstream& fin) {
+  inline void LoadTable(std::string f_name) {
+    std::ifstream fin(f_name);
     std::string temp;
     while (std::getline(fin, temp)) {
       std::istringstream buffer(temp);
@@ -242,7 +243,8 @@ struct PhenotypeTable {
     }
   }
     
-  inline void PrintTable(std::ofstream& fout) {
+  inline void PrintTable(std::string f_name) {
+    std::ofstream fout(f_name);
     for(auto known_phens : known_phenotypes) {
       uint16_t n_phen=0;
       for(Phenotype known : known_phens.second) {

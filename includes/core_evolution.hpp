@@ -38,8 +38,8 @@ struct FitnessPhenotypeTable : PhenotypeTable {
     return phenotype_fitnesses[pid.first][pid.second] * std::pow(static_cast<double>(commonness)/phenotype_builds,fitness_factor);     
   }
   
-  inline void LoadTable(std::ifstream& fin) {
-    PhenotypeTable::LoadTable(fin);
+  inline void LoadTable(std::string f_name) {
+    PhenotypeTable::LoadTable(f_name);
     for(auto& kv : known_phenotypes)
       phenotype_fitnesses[kv.first].insert(phenotype_fitnesses[kv.first].end(),kv.second.size(),0); 
   }  
