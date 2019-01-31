@@ -212,7 +212,7 @@ struct PhenotypeTable {
     undiscovered_phenotype_counts.clear();
   }
   
-  inline std::map<Phenotype_ID,uint16_t> PhenotypeFrequencies(std::vector<Phenotype_ID >& pids,const Phenotype_ID RARE_pid=NULL_pid) {
+  inline std::map<Phenotype_ID,uint16_t> PhenotypeFrequencies(std::vector<Phenotype_ID >& pids,const Phenotype_ID RARE_pid=NULL_pid, bool allow_existing=false) { 
     const uint16_t thresh_val=std::ceil(UND_threshold*phenotype_builds);
     std::map<Phenotype_ID, uint16_t> ID_counter;
     for(auto& pid : pids)
@@ -220,10 +220,11 @@ struct PhenotypeTable {
 
     const size_t all_size= ID_counter.size();
     for(auto map_it = ID_counter.begin(); map_it != ID_counter.end();) {
-      if(map_it->second < thresh_val) 
-        map_it=ID_counter.erase(map_it);
-      else
+      if(map_it->second >= thresh_val || (allow_existing && map_it->first.second < known_phenotypes[map_it->first.first].size())) 
         ++map_it;
+      else
+	map_it=ID_counter.erase(map_it);
+        
     }
     if(ID_counter.size()!=all_size)
       ++ID_counter[RARE_pid];
