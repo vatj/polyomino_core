@@ -22,9 +22,7 @@ struct FitnessPhenotypeTable : PhenotypeTable {
           known_phenotypes[kv.first].emplace_back(undiscovered_phenotypes[kv.first][nth]);
         }
     }
-    undiscovered_phenotypes.clear();
-    undiscovered_phenotype_counts.clear();
-
+    ClearIncomplete();
   }
   
   inline double GenotypeFitness(std::map<Phenotype_ID,uint16_t> ID_counter) {

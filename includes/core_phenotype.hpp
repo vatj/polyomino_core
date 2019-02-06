@@ -197,7 +197,12 @@ struct PhenotypeTable {
     ++undiscovered_phenotype_counts[phenotype_size][new_phenotype_index];
     return Phenotype_ID{phenotype_size,known_phenotypes[phenotype_size].size()+new_phenotype_index+phenotype_builds};
   }
-  
+
+  inline void ClearIncomplete() {
+    undiscovered_phenotypes.clear();
+    undiscovered_phenotype_counts.clear();
+  }
+
   inline void RelabelPhenotypes(std::vector<Phenotype_ID >& pids) {
     const uint16_t thresh_val=std::ceil(UND_threshold*phenotype_builds);
     for(auto& kv : undiscovered_phenotype_counts) {
@@ -208,9 +213,10 @@ struct PhenotypeTable {
           known_phenotypes[kv.first].emplace_back(undiscovered_phenotypes[kv.first][nth]);
         }
     }
-    undiscovered_phenotypes.clear();
-    undiscovered_phenotype_counts.clear();
+    ClearIncomplete();
   }
+
+  
   
   inline std::map<Phenotype_ID,uint16_t> PhenotypeFrequencies(std::vector<Phenotype_ID >& pids,const Phenotype_ID RARE_pid=NULL_pid, bool allow_existing=false) { 
     const uint16_t thresh_val=std::ceil(UND_threshold*phenotype_builds);

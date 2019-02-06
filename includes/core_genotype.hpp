@@ -11,7 +11,7 @@
 
 thread_local static inline std::mt19937 RNG_Engine(std::random_device{}());
 
-using InteractionPair = std::pair<uint8_t,uint8_t>;
+using InteractionPair = std::pair<size_t,size_t>;
 
 struct PotentialTileSites {
   std::vector<std::pair<InteractionPair,std::array<int8_t,3>>> sites; //array with x position, y position, and rotation
