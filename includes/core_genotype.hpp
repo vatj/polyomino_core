@@ -11,7 +11,7 @@
 
 thread_local static inline std::mt19937 RNG_Engine(std::random_device{}());
 
-using InteractionPair = std::pair<size_t,size_t>;
+using InteractionPair = std::pair<size_t,size_t>; //interaction indicies within a genotype
 
 struct PotentialTileSites {
   std::vector<std::pair<InteractionPair,std::array<int8_t,3>>> sites; //array with x position, y position, and rotation
@@ -22,8 +22,9 @@ struct PotentialTileSites {
 template<class Q> //Curiously recurring template pattern
 class PolyominoAssembly {
 public:
-  inline static bool free_seed=true;
+  inline static bool free_seed=true; //start assembly with random seed
   
+  //produce a random genotype with no interactions
   template<typename T, typename A>
   static void RandomiseGenotype(std::vector<T,A>& genotype) {
   do {
@@ -72,7 +73,7 @@ public:
     auto max_subunit = std::max_element(edges.begin(), edges.end(),[](const auto& left, const auto& right){return left.first.second <  right.first.second;})->first.second;
    
     const int8_t seed = 1+Q::free_seed*4*std::uniform_int_distribution<uint8_t>(0,max_subunit/4)(RNG_Engine);
-    const size_t UNBOUND_LIMIT= 12*(max_subunit/4+1)*(max_subunit/4+1);
+    const size_t UNBOUND_LIMIT= 12*(max_subunit/4+1)*(max_subunit/4+1); //N tile polyomino theoretically bounded by size 4*N^2
 
     std::vector<int8_t> placed_tiles{0,0,seed},growing_perimeter;
     std::vector<double> strengths_cdf;
@@ -111,6 +112,7 @@ public:
         else
           ++cut_index;
       }
+      //add new possible edges on the new perimeter
       ExtendPerimeter(edges,f_t,f_x,f_y,placed_tiles,perimeter_sites);
     }
     return placed_tiles;
