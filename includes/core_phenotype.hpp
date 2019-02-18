@@ -13,16 +13,7 @@
 
 
 
-/*! free vs one-sided polyominoes and tile vs orientation determinism */
-/*! 
-  (true) free polyominoes are not chirally distinct
-  (false) one-sided polyominoes are
 
-determinism levels as follows:
-    shape       : 1
-    tile        : 2
-    orientation : 3
-*/
 
 
 /*! phenotype definitions */
@@ -36,10 +27,22 @@ struct Phenotype {
   Phenotype(uint8_t tdx=1, uint8_t tdy=1, std::vector<uint8_t> tt={1}) {dx=tdx;dy=tdy;tiling=tt;}
   
   bool operator==(const Phenotype& rhs) {return this->dx==rhs.dx && this->dy==rhs.dy && this->tiling==rhs.tiling;}
+  inline friend std::ostream& operator<<(std::ostream& out, Phenotype& phen);
   
   inline static bool FREE_POLYOMINO=true;
   inline static uint8_t DETERMINISM_LEVEL=3;
-  inline friend std::ostream& operator<<(std::ostream& out, Phenotype& phen);
+
+  /*! free vs one-sided polyominoes and tile vs orientation determinism */
+  /*! 
+  (true) free polyominoes are not chirally distinct
+  (false) one-sided polyominoes are
+
+  determinism levels as follows:
+    shape       : 1
+    tile        : 2
+    orientation : 3
+  */
+  
   
 };
 
@@ -72,19 +75,19 @@ inline void ClockwiseRotation(Phenotype& phen) {
 inline void ChiralFlip(Phenotype& phen) {
   for(uint8_t row=0;row<phen.dy;++row)
     std::reverse(phen.tiling.begin()+row*phen.dx,phen.tiling.begin()+(row+1)*phen.dx);
-  if(Phenotype::DETERMINISM_LEVEL==3)
+  if(Phenotype::DETERMINISM_LEVEL==3) //flip tile directions only if needed
     for(uint8_t& element : phen.tiling)
       if(element && element%2==0)
 	element+=-(element-1)%4+((element-1)%4+2)%4;
 }
 
 inline void MinimizePhenRep(std::vector<uint8_t>& tiling) {
-  if(tiling.size()==1 || Phenotype::DETERMINISM_LEVEL==1) {
+  if(tiling.size()==1 || Phenotype::DETERMINISM_LEVEL==1) { //trivially labelled as 1s only
     for(uint8_t& t : tiling)
       t= t ? 1:0;
     return;
   }
-  for(uint8_t& t:tiling)
+  for(uint8_t& t:tiling) //offset values to relabel
     t+=128*(t!=0);
   uint8_t swap_count=1;  
   for(std::vector<uint8_t>::iterator t_iter=std::find_if(tiling.begin(),tiling.end(),[](const int s) { return s>0; });t_iter!=tiling.end();) {
