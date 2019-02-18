@@ -203,7 +203,7 @@ struct PhenotypeTable {
     undiscovered_phenotype_counts.clear();
   }
 
-  inline void RelabelPhenotypes(std::vector<Phenotype_ID >& pids) {
+  inline void RelabelPIDs(std::vector<Phenotype_ID >& pids,bool clear=false) {
     const uint16_t thresh_val=std::ceil(UND_threshold*phenotype_builds);
     for(auto& kv : undiscovered_phenotype_counts) {
       const size_t table_size=known_phenotypes[kv.first].size(); 
@@ -213,7 +213,28 @@ struct PhenotypeTable {
           known_phenotypes[kv.first].emplace_back(undiscovered_phenotypes[kv.first][nth]);
         }
     }
-    ClearIncomplete();
+    if(clear)
+      ClearIncomplete();
+  }
+
+  template<typename map_val>
+  inline void RelabelMaps(std::map<Phenotype_ID, map_val>& map, bool clear=false) {
+ const uint16_t thresh_val=std::ceil(UND_threshold*phenotype_builds);
+    for(auto& kv : undiscovered_phenotype_counts) {
+      const size_t table_size=known_phenotypes[kv.first].size(); 
+      size_t back_counts=1;
+      for(size_t nth=1; nth<=kv.second.size(); ++nth)
+        if(kv.second[kv.second.size()-nth] >= thresh_val) {
+	auto nh = map.extract(Phenotype_ID{kv.first,table_size+phenotype_builds-back_counts});
+	nh.key() = {kv.first,known_phenotypes[kv.first].size()-back_counts};
+	map.insert(std::move(nh));
+	++back_counts;
+        }
+    }
+    if(clear)
+      ClearIncomplete();
+
+
   }
 
   

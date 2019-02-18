@@ -9,22 +9,12 @@ struct FitnessPhenotypeTable : PhenotypeTable {
   std::function<double(uint8_t)> fit_func;
   FitnessPhenotypeTable(void) {fit_func=[](double s) {return std::gamma_distribution<double>(s*2,.5*std::pow(s,-.5))(RNG_Engine);};};
 
-  //if a phenotype is newly discovered, relabel temporary indexing into new pID
-  inline void RelabelPhenotypes(std::vector<Phenotype_ID >& pids,std::map<Phenotype_ID, std::set<InteractionPair> >& p_ints) {
-    const uint16_t thresh_val=std::ceil(UND_threshold*phenotype_builds);
-    for(auto& kv : undiscovered_phenotype_counts) {
-      const size_t table_size=known_phenotypes[kv.first].size(); 
-      for(size_t nth=0; nth<kv.second.size(); ++nth)
-        if(kv.second[nth] >= thresh_val) {
-          phenotype_fitnesses[kv.first].emplace_back(fit_func(kv.first));
-          p_ints[Phenotype_ID{kv.first,known_phenotypes[kv.first].size()}]=p_ints[Phenotype_ID{kv.first,table_size+phenotype_builds+nth}];
-          std::replace(pids.begin(),pids.end(),Phenotype_ID{kv.first,table_size+phenotype_builds+nth},Phenotype_ID{kv.first,known_phenotypes[kv.first].size()});
-          known_phenotypes[kv.first].emplace_back(undiscovered_phenotypes[kv.first][nth]);
-        }
-    }
-    ClearIncomplete();
+  inline void UpdateFitnesses() {
+	for(const auto& kv : known_phenotypes)
+	while(kv.second.size()>phenotype_fitnesses[kv.first].size())
+	  phenotype_fitnesses[kv.first].emplace_back(fit_func(kv.first));
   }
-  
+
   inline double GenotypeFitness(std::map<Phenotype_ID,uint16_t> ID_counter) {
     double fitness=0;
     for(auto& kv : ID_counter)
