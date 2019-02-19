@@ -12,10 +12,6 @@
 #include <string>
 
 
-
-
-
-
 /*! phenotype definitions */
 using Phenotype_ID = std::pair<uint8_t,uint16_t>;
 constexpr Phenotype_ID NULL_pid{0,0}, UNBOUND_pid{255,0};

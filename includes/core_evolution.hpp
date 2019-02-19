@@ -2,6 +2,8 @@
 #include <functional>
 #include <algorithm>
 
+using PopulationSize = uint16_t;
+
 struct FitnessPhenotypeTable : PhenotypeTable {
   inline static double fitness_factor=1;
 
@@ -9,16 +11,17 @@ struct FitnessPhenotypeTable : PhenotypeTable {
   std::function<double(uint8_t)> fit_func;
   FitnessPhenotypeTable(void) {fit_func=[](double s) {return std::gamma_distribution<double>(s*2,.5*std::pow(s,-.5))(RNG_Engine);};};
 
+  //Add as many new fitnesses as newly discovered phenotypes
   inline void UpdateFitnesses() {
-	for(const auto& kv : known_phenotypes)
-	while(kv.second.size()>phenotype_fitnesses[kv.first].size())
-	  phenotype_fitnesses[kv.first].emplace_back(fit_func(kv.first));
+    for(const auto& kv : known_phenotypes)
+      while(kv.second.size()>phenotype_fitnesses[kv.first].size())
+        phenotype_fitnesses[kv.first].emplace_back(fit_func(kv.first));
   }
 
   inline double GenotypeFitness(std::map<Phenotype_ID,uint16_t> ID_counter) {
     double fitness=0;
     for(auto& kv : ID_counter)
-        fitness+=phenotype_fitnesses[kv.first.first][kv.first.second] * std::pow(static_cast<double>(kv.second)/phenotype_builds,fitness_factor);
+      fitness+=phenotype_fitnesses[kv.first.first][kv.first.second] * std::pow(static_cast<double>(kv.second)/phenotype_builds,fitness_factor);
     return fitness;
   }
   
@@ -35,13 +38,15 @@ struct FitnessPhenotypeTable : PhenotypeTable {
 };
 
 //fitness proportional selection, or equal selection if net zero fitness
-inline std::vector<uint16_t> RouletteWheelSelection(std::vector<double>& fitnesses) {
-  std::vector<uint16_t> selected_indices(fitnesses.size());
+inline std::vector<PopulationSize> RouletteWheelSelection(std::vector<double>& fitnesses) {
+  std::vector<PopulationSize> selected_indices(fitnesses.size());
   std::partial_sum(fitnesses.begin(), fitnesses.end(), fitnesses.begin());
-  if(fitnesses.back()==0.) {
-    std::iota(selected_indices.begin(),selected_indices.end(),0);
+  
+  if(fitnesses.back()==0.) { //if no fitness in population, select from all equally
+    std::uniform_int_distribution<PopulationSize> dist{0, static_cast<PopulationSize>(fitnesses.size()-1)};
+    std::generate(selected_indices.begin(),selected_indices.end(), [&dist](){return dist(RNG_Engine);});
   }
-  else{
+  else{ //select proportional to weighted fitness intervals
     std::uniform_real_distribution<double> random_interval(0,fitnesses.back());
     for(auto& sel_val : selected_indices) 
       sel_val=static_cast<uint16_t>(std::lower_bound(fitnesses.begin(),fitnesses.end(),random_interval(RNG_Engine))-fitnesses.begin());
