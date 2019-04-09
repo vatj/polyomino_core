@@ -20,7 +20,8 @@ struct Phenotype {
   uint8_t dx,dy;
   std::vector<uint8_t> tiling;
 
-  Phenotype(uint8_t tdx=1, uint8_t tdy=1, std::vector<uint8_t> tt={1}) {dx=tdx;dy=tdy;tiling=tt;}
+  Phenotype(void) {dx=1;dy=1;tiling={1};}
+  Phenotype(uint8_t tdx, uint8_t tdy, std::vector<uint8_t> ttiling) {dx=tdx;dy=tdy;tiling=ttiling;}
   
   bool operator==(const Phenotype& rhs) {return this->dx==rhs.dx && this->dy==rhs.dy && this->tiling==rhs.tiling;}
   inline friend std::ostream& operator<<(std::ostream& out, Phenotype& phen);
@@ -104,7 +105,7 @@ inline void GetMinPhenRepresentation(Phenotype& phen) {
   if(phen.dy > phen.dx)
     ClockwiseRotation(phen);
   
-  for(uint8_t flip=0;flip<=Phenotype::FREE_POLYOMINO;++flip) {
+  for(bool flip=0;flip<=Phenotype::FREE_POLYOMINO;flip=!flip) {
     MinimizePhenRep(phen.tiling);
     min_tilings.emplace_back(phen.tiling);
       
@@ -120,7 +121,7 @@ inline void GetMinPhenRepresentation(Phenotype& phen) {
         min_tilings.emplace_back(phen.tiling);
       }
     }
-    if(!Phenotype::FREE_POLYOMINO)
+    if(flip || !Phenotype::FREE_POLYOMINO)
       break;
     ChiralFlip(phen);
   }

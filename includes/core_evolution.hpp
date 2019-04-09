@@ -8,8 +8,8 @@ struct FitnessPhenotypeTable : PhenotypeTable {
   inline static double fitness_factor=1;
 
   std::unordered_map<uint8_t,std::vector<double> > phenotype_fitnesses{{0,{0}}};
-  std::function<double(uint8_t)> fit_func;
-  FitnessPhenotypeTable(void) {fit_func=[](double s) {return std::gamma_distribution<double>(s*2,.5*std::pow(s,-.5))(RNG_Engine);};};
+  std::function<double(uint8_t)> fit_func=[](double s) {return std::gamma_distribution<double>(s*2,.5*std::pow(s,-.5))(RNG_Engine);};
+  //FitnessPhenotypeTable(void) ;
 
   //Add as many new fitnesses as newly discovered phenotypes
   inline void UpdateFitnesses() {
