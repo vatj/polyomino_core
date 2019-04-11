@@ -82,15 +82,15 @@ def plotTransitionsDetailed(pt):
 
                     ##special case of "reverse" transition
                     if rev_tran:
-                         dx_f=abs(dx_f)
-                         spline_points=np.insert(spline_points,2,[con_x,con_y+(0.5 if dy_f>0 else -0.5)],axis=0)
-                         dy_f=spline_points[2,1]-spline_points[1,1]
+                        dx_f=abs(dx_f)
+                        spline_points=np.insert(spline_points,2,[con_x,con_y+(0.5 if dy_f>0 else -0.5)],axis=0)
+                        dy_f=spline_points[2,1]-spline_points[1,1]
                     steps=1
                     while steps<dx_f:
                          if int(spline_points[steps+(1 if rev_tran else 0),1]*2)%2==counts_map_X[con_x+dx]%2:
-                              bump_factor= 0
+                             bump_factor= 0
                          else:
-                              bump_factor=.5 if np.sign(spline_points[-1,1]-spline_points[steps+(1 if rev_tran<0 else 0),1])>0 else -.5
+                             bump_factor=.5 if np.sign(spline_points[-1,1]-spline_points[steps+(1 if rev_tran<0 else 0),1])>0 else -.5
                          
                          adjustment_factor=dy+bump_factor
                          if abs(adjustment_factor)>1:
@@ -152,13 +152,11 @@ def plotTransitionsDetailed(pt):
                     artist.set_alpha(1 if phen==phen_key else 0.4)
                     prev_artists_phens.append(artist)
                     
-          fig.canvas.draw() 
+          fig.canvas.draw()
           return True
 
      fig.canvas.mpl_connect('pick_event', onpick)
      plt.show(block=False)
-
-
 
 
 def AddPhenotypePatch(ax,shape,xy):
@@ -177,7 +175,6 @@ def AddPhenotypePatch(ax,shape,xy):
                artists.append(ax.arrow(*(np.array([new_x/scale+.5,new_y/scale+.5,0,0])+ar_offsets[(shape[2+i+j*dx]-1)%4])*scale, head_width=0.075*scale, head_length=0.15*scale, fc='k', ec='k',alpha=0.1))
                
      return artists
-
 
 def AddConnectionPatch(ax,pts,weight):
      tck, u = splprep(pts.T, u=None, s=0.0,k=3, per=False)

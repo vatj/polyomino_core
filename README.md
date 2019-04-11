@@ -14,15 +14,15 @@ Including this repository as a submodule allows for rapid prototyping of the pol
 
 Generic assembly can be quickly implemented using existing functions. Extend the model as
   - extend base assembly 
-```
+```cpp
 class NewAssemblyModel : public PolyominoAssembly<NewAssemblyModel>
 ```
   - determine the interface type (e.g. integer, string, something more complex, etc.)
-```
+```cpp
 using Genotype = std::vector<subunit type>
 ```
   - implement the interaction matrix that returns the interaction strength between two interfaces
-```
+```cpp
 double NewAssemblyModel::InteractionMatrix(subunit A, subunit B)
 ```
   - implement any specific methods
@@ -32,21 +32,21 @@ double NewAssemblyModel::InteractionMatrix(subunit A, subunit B)
 ### Using the core model
 The main calls to the core model are to the assembly and classification
   - get interaction edges
-  ```
+  ```cpp
   const auto edges = NewAssemblyModel::GetActiveInterfaces(genotype);
   ```
   - assemble polyomino (and can track edges)
-  ```
+  ```cpp
   auto assembly_information=NewAssemblyModel::AssemblePolyomino(edges,interacting_indices);
   ```
   - get phenotype from the raw assembly
-  ```
+  ```cpp
   Phenotype phen=GetPhenotypeFromGrid(assembly_information);
   ```
   
   - potentially classify phenotype using a runtime filled table
   
-  ```
+  ```cpp
   Phenotype_ID pid = phenotypeTable->GetPhenotypeID(phen);
   ```
   
