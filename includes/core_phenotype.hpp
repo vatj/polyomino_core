@@ -120,7 +120,8 @@ inline void GetMinPhenRepresentation(Phenotype& phen) {
     ClockwiseRotation(phen);
 
   //iterate through chiral flips
-  for(bool flip=0;flip<=Phenotype::FREE_POLYOMINO;flip=!flip) {
+  bool to_flip=true;
+  while(true) {
     MinimizePhenRep(phen.tiling);
     min_tilings.emplace_back(phen.tiling);
 
@@ -140,8 +141,11 @@ inline void GetMinPhenRepresentation(Phenotype& phen) {
     }
     
     //flip only if first iteration and free polyomino
-    if(!flip && Phenotype::FREE_POLYOMINO)
+    if(to_flip && Phenotype::FREE_POLYOMINO)
       ChiralFlip(phen);
+    else
+	break;
+    to_flip=false;
   }
 
   //set tiling to smallest representation
