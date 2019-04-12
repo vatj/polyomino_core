@@ -72,8 +72,8 @@ inline void ClockwiseRotation(Phenotype& phen) {
 inline void ChiralFlip(Phenotype& phen) {
   
   //reverse each row to reflect polyomino
-  for(auto iter=phen.tiling.begin();iter!=phen.tiling.end();iter+=phen.dy)
-    std::reverse(iter,iter+phen.dy);
+  for(auto iter=phen.tiling.begin();iter!=phen.tiling.end();iter+=phen.dx)
+    std::reverse(iter,iter+phen.dx);
 
   //get chiral orientation after flip
   if(Phenotype::DETERMINISM_LEVEL==3)
@@ -145,6 +145,7 @@ inline void GetMinPhenRepresentation(Phenotype& phen) {
       ChiralFlip(phen);
     else
 	break;
+
     to_flip=false;
   }
 

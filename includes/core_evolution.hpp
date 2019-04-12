@@ -6,6 +6,8 @@ using PopulationSize = uint16_t;
 
 //simple extension of PhenotypeTable to include fitnesses accessed via pid
 struct FitnessPhenotypeTable : PhenotypeTable {
+
+  //nondeterminism punishment (gamma) parameter
   inline static double fitness_factor=1;
 
   std::unordered_map<uint8_t,std::vector<double> > phenotype_fitnesses{{0,{0}}};
@@ -34,6 +36,7 @@ struct FitnessPhenotypeTable : PhenotypeTable {
     return phenotype_fitnesses[pid.first][pid.second] * std::pow(static_cast<double>(commonness)/phenotype_builds,fitness_factor);     
   }
   
+  //load table normally, and then load in fitnesses
   inline void LoadTable(std::string f_name) {
     PhenotypeTable::LoadTable(f_name);
     for(auto& kv : known_phenotypes)
