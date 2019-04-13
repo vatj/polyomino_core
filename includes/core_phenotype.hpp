@@ -183,7 +183,7 @@ inline Phenotype GetPhenotypeFromGrid(std::vector<int8_t>& placed_tiles) {
       tile_detail=tile_vals[tileIndex] > 0 ? (tile_vals[tileIndex]-1)/4+1 : 0;
       break;
     case 3:
-	[[fallthrough]]
+	[[fallthrough]];
     default:
       tile_detail=tile_vals[tileIndex];
     }

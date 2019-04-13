@@ -12,8 +12,7 @@ def VisualiseSingleShape(shape,ax=None,corner=(0,1),extent=1,add_direction=False
         plt.figure()
         ax = plt.gca()
 
-    dx=shape[0]
-    dy=shape[1]
+    dx,dy=shape
     max_d=max(dx,dy)
     extentS=extent/max_d
     for i,j in product(range(dx),range(dy)):
