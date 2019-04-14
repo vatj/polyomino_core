@@ -1,6 +1,8 @@
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 from itertools import product
+import numpy as np
+from scipy.interpolate import splprep,splev
 
 def VisualiseSingleShape(shape,ax=None,corner=(0,1),extent=1,add_direction=False):
     cols=['darkgreen','royalblue','firebrick','goldenrod','mediumorchid']
@@ -157,7 +159,7 @@ def plotTransitionsDetailed(pt):
      fig.canvas.mpl_connect('pick_event', onpick)
      plt.show(block=False)
 
-
+##adds a polyomino to a given axis, centered around coordinates xy
 def AddPhenotypePatch(ax,shape,xy):
      ar_offsets={0:(0,-.25,0,.25),1:(-.25,0,.25,0),2:(0,.25,0,-.25),3:(.25,0,-.25,0)}
      cols=['darkgreen','royalblue','firebrick','goldenrod','mediumorchid']
