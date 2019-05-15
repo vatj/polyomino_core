@@ -40,7 +40,7 @@ public:
   
   //strip all subunits which cannot interact with initial subunit
   template<typename T, typename A>
-  static void StripNoncodingGenotype(std::vector<T,A>& genotype) {
+  static std::vector<T,A> StripNoncodingGenotype(std::vector<T,A>& genotype) {
     std::vector<size_t> coding{0},noncoding(genotype.size()/4-1);
     std::iota(noncoding.begin(), noncoding.end(), 1);
   
@@ -58,8 +58,14 @@ public:
         }
 
     //remove tiles that were not coding
-    for(size_t rm=0;rm<noncoding.size();++rm)
-      genotype.erase(genotype.begin()+(noncoding[rm]-rm)*4,genotype.begin()+(1+noncoding[rm]-rm)*4);
+    std::vector<T,A> removed;
+    for(size_t rm=0;rm<noncoding.size();++rm) {
+      //genotype.erase(genotype.begin()+(noncoding[rm]-rm)*4,genotype.begin()+(1+noncoding[rm]-rm)*4);
+
+  removed.insert(removed.end(), std::make_move_iterator(genotype.begin()+(noncoding[rm]-rm)*4), std::make_move_iterator(genotype.begin()+(1+noncoding[rm]-rm)*4));
+  genotype.erase(genotype.begin()+(noncoding[rm]-rm)*4,genotype.begin()+(1+noncoding[rm]-rm)*4); 
+  }
+	return removed;
   }
 
   //returns set of all interaction,strength tuples in a genotype
